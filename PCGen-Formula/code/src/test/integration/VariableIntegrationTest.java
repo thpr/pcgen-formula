@@ -39,7 +39,6 @@ import pcgen.base.formula.base.ScopeInstanceFactory;
 import pcgen.base.formula.base.VarScoped;
 import pcgen.base.formula.base.VariableID;
 import pcgen.base.formula.base.WriteableFunctionLibrary;
-import pcgen.base.formula.base.WriteableVariableStore;
 import pcgen.base.formula.factory.ShadowingScopeManager;
 import pcgen.base.formula.inst.ComplexNEPFormula;
 import pcgen.base.formula.inst.DelegatingVariableStore;
@@ -70,7 +69,7 @@ public class VariableIntegrationTest
 	private FunctionLibrary functionLib;
 	private SupplierValueStore valueStore;
 	private MonitorableVariableStore backingStore;
-	private WriteableVariableStore varStore;
+	private MonitorableVariableStore varStore;
 	private ImplementedScopeLibrary scopeManager;
 	private ScopeInstanceFactory instanceFactory;
 	private VariableManager varLibrary;
@@ -104,7 +103,7 @@ public class VariableIntegrationTest
 		varLibrary = new VariableManager(scopeManager, scopeManager, instanceFactory, valueStore);
 		managerFactory = new ManagerFactory(opLibrary, varLibrary, functionLib, varStore, instanceFactory);
 		backmanager = SolverUtilities.buildDynamicSolverSystem(varLibrary, managerFactory, valueStore, backingStore);
-		//manager = SolverUtilities.buildDynamicSolverSystem(varLibrary, managerFactory, valueStore, varStore);
+		//effectively do: manager = SolverUtilities.buildDynamicSolverSystem(varLibrary, managerFactory, valueStore, varStore);
 		SimpleSolverManager newSolver =
 				new SimpleSolverManager(varLibrary::isLegalVariableID,
 					managerFactory, valueStore, varStore);
@@ -113,6 +112,7 @@ public class VariableIntegrationTest
 		SolverStrategy strategy = new AggressiveStrategy(dm::processForChildren,
 			newSolver::processSolver);
 		backingStore.addGeneralListener(event -> strategy.processValueUpdated(event.getVarID()));
+		varStore.addGeneralListener(event -> strategy.processValueUpdated(event.getVarID()));
 		manager = new GeneralSolverSystem(newSolver, dm, strategy);
 	}
 
